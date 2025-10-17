@@ -43,7 +43,7 @@ export interface Stores {
 }
 
 export class SPVStore {
-  private interval: Timer | undefined;
+  private interval: ReturnType<typeof setInterval> | undefined;
   constructor(
     public services: Services,
     public stores: Stores,
