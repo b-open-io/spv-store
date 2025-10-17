@@ -28,6 +28,7 @@
   ],
   "scripts": {
     "build": "bun run scripts/build.ts && npm pack",
+    "prepare": "bun run scripts/build.ts",
     "clean": "rm -rf dist",
     "format": "tsfmt -r",
     "test": "jest",
