@@ -6,9 +6,9 @@ import {
   type Stores,
 } from "../spv-store";
 import { ParseMode, type Indexer } from "../models/indexer";
-import { BlockStorageIDB, TxnStorageIDB, TxoStorageIDB } from "../storage/idb";
 import { BlockStore, TxnStore, TxoStore } from "../stores";
 import { EventEmitter } from "../lib/event-emitter";
+import { createBaseStorage, createTxoStorage } from "../storage/factory";
 
 export class OneSatWebSPV extends SPVStore {
   private constructor(
@@ -29,6 +29,7 @@ export class OneSatWebSPV extends SPVStore {
     startSync = false,
     syncTags?: Set<string>,
     parseMode?: ParseMode,
+    storagePath?: string,
   ) {
     const oneSatService = new OneSatProvider(network, accountId);
     const emitter = new EventEmitter();
@@ -38,15 +39,26 @@ export class OneSatWebSPV extends SPVStore {
       txns: oneSatService,
       broadcast: oneSatService,
     };
-    const [blockStorage, txnStorage] = await Promise.all([
-      BlockStorageIDB.init(network),
-      TxnStorageIDB.init(network),
-    ]);
 
+    // Create block and txn storage first (no circular dependencies)
+    const { blocks: blockStorage, txns: txnStorage } = createBaseStorage({
+      network,
+      path: storagePath,
+    });
+
+    // Create store wrappers
     const stores: Stores = {};
     stores.blocks = new BlockStore(blockStorage, services, emitter);
     stores.txns = new TxnStore(txnStorage, services, stores, emitter);
-    const txoStorage = await TxoStorageIDB.init(accountId, network, stores.txns);
+
+    // Now create txo storage with txnStore dependency
+    const txoStorage = createTxoStorage({
+      accountId,
+      network,
+      path: storagePath,
+      txnStore: stores.txns,
+    });
+
     stores.txos = new TxoStore(
       txoStorage,
       services,

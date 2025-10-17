@@ -10,7 +10,8 @@
     "moduleResolution": "bundler",
     // "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
-    "noEmit": true,
+    "declaration": true,
+    "noEmit": false,
     "typeRoots": ["./node_modules/@types", "./types"],
     "allowSyntheticDefaultImports": true,
     // Best practices
